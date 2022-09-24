@@ -54,9 +54,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
             });
         } catch (error) {
             console.error(error);
-            return {
+            /*return {
                 error: "Error adding DNS record"
-            };
+            };*/
         }
     } else {
         host = data[0].host;
