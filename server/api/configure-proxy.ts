@@ -43,20 +43,20 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
     const { count, data } = await supabase.from("reverse_proxies").select().eq("owner", user.id);
     if (count === 0 || !data || !data[0] || !data[0].host) {
         // New account
-        host = `${randomString(8)}.runcitadel.space`;
+        host = `${randomString(8)}.sats4.me`;
         try {
-            await cf.dnsRecords.add(process.env.CLOUDFLARE_ZONE_ID, {
+            await cf.dnsRecords.add(process.env.CLOUDFLARE_PROXIES_ZONE_ID, {
                 type: "A",
-                name: host.replace(".runcitadel.space", ""),
+                name: host.replace(".sats4.me", ""),
                 content: process.env.PROXY_ORIGIN_IP,
                 ttl: 3600,
                 proxied: true,
             });
         } catch (error) {
             console.error(error);
-            /*return {
+            return {
                 error: "Error adding DNS record"
-            };*/
+            };
         }
     } else {
         host = data[0].host;
