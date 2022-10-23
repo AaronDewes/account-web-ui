@@ -19,9 +19,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
     const cf = new cloudflare({
         token: process.env.CLOUDFLARE_TOKEN
     });
-    if (event.req.method !== 'POST' && event.req.method !== 'PUT') {
+    if (event.req.method !== 'GET' && event.req.method !== 'POST' && event.req.method !== 'PUT') {
         event.res.statusCode = 405;
-        event.res.setHeader('Allow', 'POST, PUT');
+        event.res.setHeader('Allow', 'GET, POST, PUT');
         return {
             error: "Method not allowed"
         };
@@ -31,6 +31,26 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
         event.res.statusCode = 401;
         return {
             error: "Permission denied"
+        };
+    }
+    if (event.req.method === 'GET') {
+        let subdomain = randomString(8);
+        let secret = randomString(128);
+        const { error } = await supabase.from("subdomains").insert({
+            domain: subdomain,
+            secret,
+        });
+
+        if (error) {
+            event.res.statusCode = 500;
+            return {
+                error: error.message
+            };
+        }
+        
+        return {
+            domain: subdomain,
+            secret,
         };
     }
     const supabase = serverSupabaseServiceRole(event) as SupabaseClient<Database>;
@@ -80,19 +100,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
         }
         subdomain = data.domain;
     } else {
-        subdomain = randomString(8);
-        let secret = randomString(128);
-        const { error } = await supabase.from("subdomains").insert({
-            domain: subdomain,
-            secret,
-        });
-
-        if (error) {
-            event.res.statusCode = 500;
+            event.res.statusCode = 400;
             return {
-                error: error.message
+                error: 'Missing subdomain'
             };
-        }
     }
 
     try {
