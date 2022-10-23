@@ -56,12 +56,13 @@ onMounted(async () => {
   let { data, error } = await client
     .from("reverse_proxies")
     .select()
-    .eq("owner", user.value.id)
-    .single();
+    .eq("owner", user.value.id);
 
-  if (!error && data) {
-    newUrl.value = data.target_url;
-    btcpayCompat.value = data.btcpay_compat;
+  let current_proxy = data?.filter((element) => !element.target_url.includes("_lnme"));
+
+  if (!error && current_proxy[0]) {
+    newUrl.value = current_proxy[0].target_url;
+    btcpayCompat.value = current_proxy[0].btcpay_compat;
   }
 });
 

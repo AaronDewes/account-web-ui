@@ -90,9 +90,14 @@ onMounted(async () => {
   let { data, error } = await client
     .from("LightningAddresses")
     .select("address, proxyTarget")
-    .eq("user_id", user.value.id);
+    .eq("user_id", user.value.id)
+    .maybeSingle();
+  let { data: remote_data } = await client
+    .from("reverse_proxies")
+    .select("target_url")
+    .eq("owner", user.value.id);
 
-  if (!data || !data[0] || !data[0].proxyTarget || error) {
+  if (!data || !data.proxyTarget || error) {
     await client.from("LightningAddresses").insert({
       user_id: user.value.id,
       proxyTarget: "",
@@ -103,9 +108,14 @@ onMounted(async () => {
         .from("LightningAddresses")
         .select("address, proxyTarget")
         .eq("user_id", user.value.id)
+        .single()
     ).data;
   }
   newUrl.value = data[0].proxyTarget;
+  let real_remote = remote_data?.find((element) =>
+    element.target_url.includes("_lnme")
+  );
+  if (real_remote?.target_url) newUrl.value = real_remote.target_url;
   newAddress.value = data[0].address + "@sats4.me";
   const encoder = new TextEncoder();
   const words = bech32.toWords(
@@ -134,12 +144,23 @@ async function saveData() {
 
     const newOnionArrayUrl = newUrl.value ? newUrl.value.split("@") : [false];
     const newOnionUrl = newOnionArrayUrl[newOnionArrayUrl.length - 1];
+
+    let result = await $fetch("/api/configure-proxy", {
+      method: "POST",
+      body: {
+        onionUrl: newOnionUrl,
+        is_addr: true,
+      },
+    });
+    if (result.error) {
+      alert(result.error);
+      throw new Error(result.error);
+    }
+
     const { error } = await client
       .from("LightningAddresses")
       .update({
-        ...((newOnionUrl ? { proxyTarget: newOnionUrl } : {}) as {
-          proxyTarget: string;
-        }),
+        proxy_target: result.host,
         address: newAddress.value.split("@")[0].toLowerCase(),
       })
       .match({ user_id: user.value.id });
