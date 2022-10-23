@@ -29,6 +29,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
     const body: {
         onionUrl?: string;
         btcpay_compat?: boolean;
+        is_addr?: boolean;
     } = await useBody(event);
 
     if (typeof body?.onionUrl !== 'string') {
@@ -43,7 +44,11 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
     const { count, data } = await supabase.from("reverse_proxies").select().eq("owner", user.id);
     if (count === 0 || !data || !data[0] || !data[0].host) {
         // New account
-        host = `${randomString(8)}.sats4.me`;
+        let id = randomString(8);
+        if (body.is_addr) {
+            id += "_lnme";
+        }
+        host = `${id}.sats4.me`;
         try {
             await cf.dnsRecords.add(process.env.CLOUDFLARE_PROXIES_ZONE_ID, {
                 type: "A",
