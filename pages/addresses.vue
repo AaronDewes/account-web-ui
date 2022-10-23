@@ -110,7 +110,7 @@ onMounted(async () => {
   const encoder = new TextEncoder();
   const words = bech32.toWords(
     encoder.encode(
-      `https://sats4.me/.well-known/lnurl/${newAddress.value.split("@")[0]}`
+      `https://sats4.me/.well-known/lnurlp/${newAddress.value.split("@")[0]}`
     )
   );
   userLnurl.value = bech32.encode("lnurl", words, 512);
@@ -157,7 +157,7 @@ async function saveData() {
     const encoder = new TextEncoder();
     const words = bech32.toWords(
       encoder.encode(
-        `https://sats4.me/.well-known/lnurl/${newAddress.value.split("@")[0]}`
+        `https://sats4.me/.well-known/lnurlp/${newAddress.value.split("@")[0]}`
       )
     );
     userLnurl.value = bech32.encode("lnurl", words, 512);

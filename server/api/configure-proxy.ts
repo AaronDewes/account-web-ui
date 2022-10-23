@@ -67,9 +67,11 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
         host = data[0].host;
     }
 
+    let onionUrl = body.onionUrl.includes("://") ? body.onionUrl : `http://${body.onionUrl}`;
+
     const { error } = await supabase.from("reverse_proxies").upsert({
         host,
-        target_url: body.onionUrl,
+        target_url: onionUrl,
         owner: user.id,
         btcpay_compat: body.btcpay_compat || false
     });
