@@ -3,6 +3,8 @@ import { SupabaseClient } from "@supabase/supabase-js"
 import { Database } from '~~/types/db';
 import * as crypto from 'crypto';
 import cloudflare from "cloudflare";
+import is_ip_private from 'private-ip';
+
 
 // Generate a random hex string with the given length
 const randomString = (length: number) => crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
@@ -43,6 +45,20 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
         event.res.statusCode = 400;
         return {
             error: 'Invalid data'
+        };
+    }
+
+    if (!["A", "AAAA", "TXT"].includes(body.record_type)) {
+        event.res.statusCode = 400;
+        return {
+            error: 'Only A, AAAA and TXT records are supported'
+        };
+    }
+
+    if ((body.record_type === "A" || body.record_type === "AAAA") && !is_ip_private(body.content)) {
+        event.res.statusCode = 400;
+        return {
+            error: 'Only private IP addresses are supported.'
         };
     }
 

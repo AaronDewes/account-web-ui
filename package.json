@@ -27,6 +27,7 @@
     "bech32": "^2.0.0",
     "cloudflare": "^2.9.1",
     "filenamify": "^5.1.1",
+    "private-ip": "^2.3.4",
     "qrcode.vue": "^3.3.3",
     "webln": "^0.3.0"
   }
